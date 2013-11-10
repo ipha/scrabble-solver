@@ -187,7 +187,7 @@
        <widget class="QLineEdit" name="letters"/>
       </item>
       <item>
-       <widget class="QPushButton" name="solve">
+       <widget class="QPushButton" name="solve_btn">
         <property name="text">
          <string>Solve</string>
         </property>
@@ -196,14 +196,14 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QPushButton" name="save">
+         <widget class="QPushButton" name="save_btn">
           <property name="text">
            <string>Save</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="load">
+         <widget class="QPushButton" name="load_btn">
           <property name="text">
            <string>Load</string>
           </property>
