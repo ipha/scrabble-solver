@@ -6,13 +6,16 @@ import scrabble
 import pickle
 
 class ScrabbleGUI(QtGui.QMainWindow):
-	def __init__(self, parent=None):
+	def __init__(self, parent=None, filename="data"):
 		QtGui.QMainWindow.__init__(self, parent)
 		# Load layout
 		uic.loadUi("scrabble-gui.ui", self)
 
 		# Create solver instance
 		self.solver = scrabble.Solver(scrabble.WORDSWITHFRIENDS)
+
+		# save file name
+		self.filename = filename
 
 		# Create tile backgrounds
 		for x in range(0, 15):
@@ -80,14 +83,14 @@ class ScrabbleGUI(QtGui.QMainWindow):
 		data["tiles"] = self.letters.text()
 
 		# TODO choose save file
-		save_file = open('data.pkl', 'wb')
+		save_file = open(self.filename + ".pkl", 'wb')
 		pickle.dump(data, save_file)
 		save_file.close()
 
 	def load(self):
 		# TODO choose save file
 		try:
-			save_file = open('data.pkl', 'rb')
+			save_file = open(self.filename + ".pkl", 'rb')
 			data = pickle.load(save_file)
 			save_file.close()
 
@@ -101,7 +104,10 @@ class ScrabbleGUI(QtGui.QMainWindow):
 
 def main():
 	app = QtGui.QApplication(sys.argv)
-	window = ScrabbleGUI()
+	if len( sys.argv ) == 1:
+		window = ScrabbleGUI()
+	else:
+		window = ScrabbleGUI(filename=sys.argv[1])
 	window.show()
 	sys.exit(app.exec_())
 
