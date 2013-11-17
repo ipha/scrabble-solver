@@ -13,7 +13,7 @@ class Solver:
 		self.wordlist = set(open(wordfile).read().split())
 
 		# Init structures
-		self.list_board = [[' '] * 15 for x in range(15)]
+		self.board = [[' '] * 15 for x in range(15)]
 
 		# Left/Up scan cache
 		# self.left_cache = [[0] * 15 for x in range(15)]
@@ -316,9 +316,6 @@ class Solver:
 		return (score * score_mult) + (self.all_tiles_bonus if used_count == 7 else 0) + secondary_score
 
 	def solve(self, tiles):
-		# Convert board to tuple
-		# Maybe faster?
-		self.board = tuple(tuple(i) for i in self.list_board)
 		self.__update_cache()
 
 		valid_words = []
@@ -346,7 +343,6 @@ class Solver:
 						# Valid starting spot, check every permutation
 						for word in tiles_perm[length]:
 							# Check new horizontal word
-							# (new_word, x_start, x_end) = self.__get_full_word(x, y, word, HORIZONTAL)
 							if self.__fill_frame(frame, word) in self.wordlist:
 								# Check each new vertical word
 								(new_word, x_start, x_end) = self.__get_full_word(x, y, word, HORIZONTAL)
@@ -369,7 +365,6 @@ class Solver:
 						# Valid starting spot, check every permutation
 						for word in tiles_perm[length]:
 							# Check new vertical word
-							# (new_word, y_start, y_end) = self.__get_full_word(x, y, word, VERTICAL)
 							if self.__fill_frame(frame, word) in self.wordlist:		
 								# Check each new horizontal word
 								(new_word, y_start, y_end) = self.__get_full_word(x, y, word, VERTICAL)

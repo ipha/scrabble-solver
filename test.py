@@ -5,7 +5,7 @@ data = {'tiles': 'htmohoc', 'board': [[' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', '
 
 solver = scrabble.Solver(scrabble.WORDSWITHFRIENDS)
 
-solver.list_board = data['board']
+solver.board = data['board']
 cProfile.run("solver.solve('htmohoc')")
 
 # a = solver._Solver__get_frame(2, 14, 5, 0)

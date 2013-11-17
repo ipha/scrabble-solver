@@ -53,10 +53,10 @@ class ScrabbleGUI(QtGui.QMainWindow):
 			for y in range(0, 15):
 				char = self.board.item(y, x).text()
 				if char in "abcdefghijklmnopqrstuvwxyz":
-					self.solver.list_board[y][x] = char
+					self.solver.board[y][x] = char
 				else:
 					self.board.item(y, x).setText(' ')
-					self.solver.list_board[y][x] = ' '
+					self.solver.board[y][x] = ' '
 
 		valid_words = self.solver.solve(self.letters.text())
 
@@ -69,7 +69,7 @@ class ScrabbleGUI(QtGui.QMainWindow):
 
 	def save(self):
 		data = {
-			"board": self.solver.list_board,
+			"board": self.solver.board,
 			"tiles": ""
 		}
 		for x in range(0, 15):
