@@ -196,6 +196,7 @@ class Solver:
 		return False
 
 	# Get frame of word
+	# @profile
 	def __get_frame(self, x, y, length, direction):
 		frame = []
 		if direction == HORIZONTAL:
@@ -221,20 +222,10 @@ class Solver:
 				while (yi < 15) and (self.board[yi][x] != ' '):
 					frame.append(self.board[yi][x])
 					yi += 1
-		return frame
-
-	def __fill_frame(self, frame, string):
-		s = ""
-		i = 0
-		for c in frame:
-			if c == ' ':
-				s += string[i]
-				i += 1
-			else:
-				s += c
-		return s
+		return ''.join(frame).replace(' ', '%c')
 
 	# Get new word created
+	# TODO: use frames?
 	def __get_full_word(self, x, y, string, direction):
 		word = ""
 
@@ -314,7 +305,7 @@ class Solver:
 					score += self.letter_value[word[i]]
 
 		return (score * score_mult) + (self.all_tiles_bonus if used_count == 7 else 0) + secondary_score
-
+	# @profile
 	def solve(self, tiles):
 		self.__update_cache()
 
@@ -332,6 +323,7 @@ class Solver:
 			for i in range(7):
 				tiles_perm[i].update(itertools.permutations(tiles, i+1))
 
+
 		for length in range(7):
 			# Horizontal pass
 			print("Checking length %i, horizontal" % (length + 1))
@@ -343,7 +335,7 @@ class Solver:
 						# Valid starting spot, check every permutation
 						for word in tiles_perm[length]:
 							# Check new horizontal word
-							if self.__fill_frame(frame, word) in self.wordlist:
+							if frame % word in self.wordlist:
 								# Check each new vertical word
 								(new_word, x_start, x_end) = self.__get_full_word(x, y, word, HORIZONTAL)
 								valid = True
@@ -365,7 +357,7 @@ class Solver:
 						# Valid starting spot, check every permutation
 						for word in tiles_perm[length]:
 							# Check new vertical word
-							if self.__fill_frame(frame, word) in self.wordlist:		
+							if frame % word in self.wordlist:
 								# Check each new horizontal word
 								(new_word, y_start, y_end) = self.__get_full_word(x, y, word, VERTICAL)
 								valid = True
