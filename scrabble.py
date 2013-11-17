@@ -195,6 +195,45 @@ class Solver:
 		# Bad spot
 		return False
 
+	# Get frame of word
+	def __get_frame(self, x, y, length, direction):
+		frame = []
+		if direction == HORIZONTAL:
+			xi = self.left_cache[y][x]
+			while (xi < 15) and (self.board[y][xi] != ' '):
+				frame.append(self.board[y][xi])
+				xi += 1
+			for j in range(length):
+				frame.append(self.board[y][xi])
+				xi += 1
+				while (xi < 15) and (self.board[y][xi] != ' '):
+					frame.append(self.board[y][xi])
+					xi += 1
+				
+		if direction == VERTICAL:
+			yi = self.up_cache[y][x]
+			while (yi < 15) and (self.board[yi][x] != ' '):
+				frame.append(self.board[yi][x])
+				yi += 1
+			for j in range(length):
+				frame.append(self.board[yi][x])
+				yi += 1
+				while (yi < 15) and (self.board[yi][x] != ' '):
+					frame.append(self.board[yi][x])
+					yi += 1
+		return frame
+
+	def __fill_frame(self, frame, string):
+		s = ""
+		i = 0
+		for c in frame:
+			if c == ' ':
+				s += string[i]
+				i += 1
+			else:
+				s += c
+		return s
+
 	# Get new word created
 	def __get_full_word(self, x, y, string, direction):
 		word = ""
@@ -276,7 +315,6 @@ class Solver:
 
 		return (score * score_mult) + (self.all_tiles_bonus if used_count == 7 else 0) + secondary_score
 
-
 	def solve(self, tiles):
 		# Convert board to tuple
 		# Maybe faster?
@@ -303,12 +341,15 @@ class Solver:
 			for y in range(15):
 				for x in range(15 - length):
 					if self.__check_spot(x, y, length+1, HORIZONTAL):
+						# Get frame for spot
+						frame = self.__get_frame(x, y, length+1, HORIZONTAL)
 						# Valid starting spot, check every permutation
 						for word in tiles_perm[length]:
 							# Check new horizontal word
-							(new_word, x_start, x_end) = self.__get_full_word(x, y, word, HORIZONTAL)
-							if new_word in self.wordlist:
+							# (new_word, x_start, x_end) = self.__get_full_word(x, y, word, HORIZONTAL)
+							if self.__fill_frame(frame, word) in self.wordlist:
 								# Check each new vertical word
+								(new_word, x_start, x_end) = self.__get_full_word(x, y, word, HORIZONTAL)
 								valid = True
 								for i in range(x_start, x_end):
 									if self.board[y][i] == ' ':
@@ -323,12 +364,15 @@ class Solver:
 			for y in range(15):
 				for x in range(15 - length):
 					if self.__check_spot(x, y, length+1, VERTICAL):
+						# Get frame for spot
+						frame = self.__get_frame(x, y, length+1, VERTICAL)
 						# Valid starting spot, check every permutation
 						for word in tiles_perm[length]:
 							# Check new vertical word
-							(new_word, y_start, y_end) = self.__get_full_word(x, y, word, VERTICAL)
-							if new_word in self.wordlist:
+							# (new_word, y_start, y_end) = self.__get_full_word(x, y, word, VERTICAL)
+							if self.__fill_frame(frame, word) in self.wordlist:		
 								# Check each new horizontal word
+								(new_word, y_start, y_end) = self.__get_full_word(x, y, word, VERTICAL)
 								valid = True
 								for i in range(y_start, y_end):
 									if self.board[i][x] == ' ':
