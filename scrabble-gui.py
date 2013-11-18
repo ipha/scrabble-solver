@@ -48,7 +48,14 @@ class ScrabbleGUI(QtGui.QMainWindow):
 
 		# Show window
 		self.show()
+	def add(self, text):
+		self.results.append(text)
+
 	def solve(self):
+		self.solve_btn.setEnabled(False)
+		self.solve_btn.setText("Solving...")
+		self.results.clear()
+
 		for x in range(0, 15):
 			for y in range(0, 15):
 				char = self.board.item(y, x).text()
@@ -57,15 +64,15 @@ class ScrabbleGUI(QtGui.QMainWindow):
 				else:
 					self.board.item(y, x).setText(' ')
 					self.solver.board[y][x] = ' '
+		# Start solver thread
+		self.thread = WorkThread(self.solver, self.letters.text())
+		self.connect( self.thread, QtCore.SIGNAL("update(QString)"), self.add )
+		self.connect( self.thread, QtCore.SIGNAL("finished()"), self.solve_done )
+		self.thread.start()
 
-		valid_words = self.solver.solve(self.letters.text())
-
-		self.results.clear()
-		for word in valid_words:
-			if word[3] == scrabble.HORIZONTAL:
-				self.results.append("Horz: x: %2i  y: %2i score: %i word: %s" % (word[1]+1, word[2]+1, word[4], word[0]))
-			if word[3] == scrabble.VERTICAL:
-				self.results.append("Vert: x: %2i  y: %2i score: %i word: %s" % (word[1]+1, word[2]+1, word[4], word[0]))
+	def solve_done(self):
+		self.solve_btn.setEnabled(True)
+		self.solve_btn.setText("Solve")
 
 	def save(self):
 		data = {
@@ -101,6 +108,25 @@ class ScrabbleGUI(QtGui.QMainWindow):
 		except:
 			print("Couldn't load file")
 
+class WorkThread(QtCore.QThread):
+	def __init__(self, solver, tiles):
+		QtCore.QThread.__init__(self)
+		self.solver = solver
+		self.tiles = tiles
+	
+	def __del__(self):
+		self.wait()
+	
+	def run(self):
+		valid_words = self.solver.solve(self.tiles)
+		for word in valid_words:
+			if word[3] == scrabble.HORIZONTAL:
+				self.emit(QtCore.SIGNAL("update(QString)"),
+					"Horz: x: %2i  y: %2i weight: %i score: %i word: %s" % (word[1]+1, word[2]+1, word[4], word[5], word[0]))
+			if word[3] == scrabble.VERTICAL:
+				self.emit(QtCore.SIGNAL("update(QString)"),
+					"Vert: x: %2i  y: %2i weight: %i score: %i word: %s" % (word[1]+1, word[2]+1, word[4], word[5], word[0]))
+		return
 
 def main():
 	app = QtGui.QApplication(sys.argv)

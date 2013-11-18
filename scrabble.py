@@ -264,6 +264,8 @@ class Solver:
 		score = 0
 		score_mult = 1
 		secondary_score = 0
+		words_created = 1
+		triple_word_used = False
 
 		if direction == HORIZONTAL:
 			for i in range(0, len(word)):
@@ -272,10 +274,13 @@ class Solver:
 					used_count += 1
 					score += self.letter_value[word[i]] * self.letter_mult[y][x+i]
 					score_mult *= self.word_mult[y][x+i]
+					if self.word_mult[y][x+i] == 3:
+						triple_word_used = True
 
 					# Check new veritcal words
 					(vert_word, y_start, y_end) = self.__get_full_word(x+i, y, word[i], VERTICAL)
 					if len(vert_word) > 1:
+						words_created += 1
 						vert_score = 0
 						for char in vert_word:
 							vert_score += self.letter_value[char]
@@ -291,10 +296,13 @@ class Solver:
 					used_count += 1
 					score += self.letter_value[word[i]] * self.letter_mult[y+i][x]
 					score_mult *= self.word_mult[y+i][x]
+					if self.word_mult[y+i][x] == 3:
+						triple_word_used = True
 
 					# Check new horrizontal words
 					(horz_word, x_start, x_end) = self.__get_full_word(x, y+i, word[i], HORIZONTAL)
 					if len(horz_word) > 1:
+						words_created += 1
 						horz_score = 0
 						for char in horz_word:
 							horz_score += self.letter_value[char]
@@ -303,8 +311,19 @@ class Solver:
 				# Existing tile
 				else:
 					score += self.letter_value[word[i]]
-
-		return (score * score_mult) + (self.all_tiles_bonus if used_count == 7 else 0) + secondary_score
+		total_score = (score * score_mult) + (self.all_tiles_bonus if used_count == 7 else 0) + secondary_score
+		# Weight score
+		# +20% if triple word is used
+		# -5% for each word created over 2
+		# -20% for 2 letter words
+		weight_score = total_score
+		if triple_word_used:
+			weight_score *= 1.2
+		if words_created > 2:
+			weight_score *= 0.95**(words_created-2)
+		if len(word) == 2:
+			weight_score *= 0.8
+		return (total_score, weight_score)
 	# @profile
 	def solve(self, tiles):
 		self.__update_cache()
@@ -346,8 +365,8 @@ class Solver:
 											valid = False
 											break
 								if valid:
-									valid_words.append([new_word, x_start, y, HORIZONTAL, 
-										self.__calculate_score(x_start, y, new_word, HORIZONTAL)])
+									(total_score, weight_score) = self.__calculate_score(x_start, y, new_word, HORIZONTAL)
+									valid_words.append([new_word, x_start, y, HORIZONTAL, weight_score, total_score])
 			print("Checking length %i, vertical" % (length + 1))
 			for y in range(15):
 				for x in range(15 - length):
@@ -368,8 +387,7 @@ class Solver:
 											valid = False
 											break
 								if valid:
-									valid_words.append([new_word, x, y_start, VERTICAL, 
-										self.__calculate_score(x, y_start, new_word, VERTICAL)])
-
+									(total_score, weight_score) = self.__calculate_score(x, y_start, new_word, VERTICAL)
+									valid_words.append([new_word, x, y_start, VERTICAL, weight_score, total_score])
 
 		return sorted(valid_words, key=lambda word: word[4])
