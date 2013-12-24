@@ -56,11 +56,15 @@ class ScrabbleGUI(QtGui.QMainWindow):
 		self.solve_btn.setText("Solving...")
 		self.results.clear()
 
+		self.solver.blanks = []
 		for x in range(0, 15):
 			for y in range(0, 15):
 				char = self.board.item(y, x).text()
 				if char in "abcdefghijklmnopqrstuvwxyz":
 					self.solver.board[y][x] = char
+				elif char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
+					self.solver.board[y][x] = char.lower()
+					self.solver.blanks.append((x,y))
 				else:
 					self.board.item(y, x).setText(' ')
 					self.solver.board[y][x] = ' '

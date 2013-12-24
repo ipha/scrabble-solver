@@ -15,6 +15,8 @@ class Solver:
 		# Init structures
 		self.board = [[' '] * 15 for x in range(15)]
 
+		self.blanks = []
+
 		# Left/Up scan cache
 		# self.left_cache = [[0] * 15 for x in range(15)]
 		# self.up_cache = [[0] * 15 for x in range(15)]
@@ -60,8 +62,12 @@ class Solver:
 				'g': 2, 'h': 4, 'i': 1, 'j': 8, 'k': 5,  'l': 1,
 				'm': 3, 'n': 1, 'o': 1, 'p': 3, 'q': 10, 'r': 1,
 				's': 1, 't': 1, 'u': 1, 'v': 4, 'w': 4,  'x': 8,
-				'y': 4, 'z': 10}
-
+				'y': 4, 'z': 10,
+				'A': 0, 'B': 0, 'C': 0, 'D': 0, 'E': 0,  'F': 0,
+				'G': 0, 'H': 0, 'I': 0, 'J': 0, 'K': 0,  'L': 0,
+				'M': 0, 'N': 0, 'O': 0, 'P': 0, 'Q': 0,  'R': 0,
+				'S': 0, 'T': 0, 'U': 0, 'V': 0, 'W': 0,  'X': 0,
+				'Y': 0, 'Z': 0}
 			self.all_tiles_bonus = 50
 
 		# Words with Friends
@@ -105,7 +111,12 @@ class Solver:
 				'g': 3, 'h': 3, 'i': 1, 'j': 10, 'k': 5,  'l': 2,
 				'm': 4, 'n': 2, 'o': 1, 'p': 4,  'q': 10, 'r': 1,
 				's': 1, 't': 1, 'u': 2, 'v': 5,  'w': 4,  'x': 8,
-				'y': 3, 'z': 10}
+				'y': 3, 'z': 10,
+				'A': 0, 'B': 0, 'C': 0, 'D': 0,  'E': 0,  'F': 0,
+				'G': 0, 'H': 0, 'I': 0, 'J': 0,  'K': 0,  'L': 0,
+				'M': 0, 'N': 0, 'O': 0, 'P': 0,  'Q': 0,  'R': 0,
+				'S': 0, 'T': 0, 'U': 0, 'V': 0,  'W': 0,  'X': 0,
+				'Y': 0, 'Z': 0}
 
 			self.all_tiles_bonus = 35
 
@@ -287,7 +298,7 @@ class Solver:
 						vert_score += self.letter_value[word[i]] * (self.letter_mult[y][x+i]-1)
 						secondary_score += (vert_score * self.word_mult[y][x+i])
 				# Existing tile
-				else:
+				elif (x+i, y) not in self.blanks:
 					score += self.letter_value[word[i]]
 		if direction == VERTICAL:
 			for i in range(0, len(word)):
@@ -309,7 +320,7 @@ class Solver:
 						horz_score += self.letter_value[word[i]] * (self.letter_mult[y+i][x]-1)
 						secondary_score += (horz_score * self.word_mult[y+i][x])
 				# Existing tile
-				else:
+				elif (x, y+i) not in self.blanks:
 					score += self.letter_value[word[i]]
 		total_score = (score * score_mult) + (self.all_tiles_bonus if used_count == 7 else 0) + secondary_score
 		# Weight score
@@ -335,7 +346,10 @@ class Solver:
 		# (Better way of doing this?)
 		tiles_perm = [ set() for i in range(7) ]
 		if '*' in tiles:
-			for char in "abcdefghijklmnopqrstuvwxyz":
+			if tiles.count('*') > 1:
+				print("Multiple blanks not yet supported")
+				return []
+			for char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ":
 				for i in range(7):
 					tiles_perm[i].update(itertools.permutations(tiles.replace('*', char), i+1))
 		else:
@@ -354,36 +368,41 @@ class Solver:
 						# Valid starting spot, check every permutation
 						for word in tiles_perm[length]:
 							# Check new horizontal word
-							if frame % word in self.wordlist:
+							if (frame % word).lower() in self.wordlist:
 								# Check each new vertical word
 								(new_word, x_start, x_end) = self.__get_full_word(x, y, word, HORIZONTAL)
+								print("%2i, %2i: %s" % (x, y, new_word))
 								valid = True
 								for i in range(x_start, x_end):
 									if self.board[y][i] == ' ':
 										(vert_word, y_start, y_end) = self.__get_full_word(i, y, new_word[i - x_start], VERTICAL)
-										if not(vert_word in self.wordlist) and len(vert_word) > 1:
+										if not(vert_word.lower() in self.wordlist) and len(vert_word) > 1:
 											valid = False
 											break
 								if valid:
 									(total_score, weight_score) = self.__calculate_score(x_start, y, new_word, HORIZONTAL)
 									valid_words.append([new_word, x_start, y, HORIZONTAL, weight_score, total_score])
 			print("Checking length %i, vertical" % (length + 1))
-			for y in range(15):
-				for x in range(15 - length):
+			for y in range(15-length):
+				for x in range(15 ):
 					if self.__check_spot(x, y, length+1, VERTICAL):
 						# Get frame for spot
 						frame = self.__get_frame(x, y, length+1, VERTICAL)
+						if(y == 12 and x == 5):
+							print(frame)
+
 						# Valid starting spot, check every permutation
 						for word in tiles_perm[length]:
 							# Check new vertical word
-							if frame % word in self.wordlist:
+							if (frame % word).lower() in self.wordlist:
 								# Check each new horizontal word
 								(new_word, y_start, y_end) = self.__get_full_word(x, y, word, VERTICAL)
+								print("%2i, %2i: %s" % (x, y, new_word))
 								valid = True
 								for i in range(y_start, y_end):
 									if self.board[i][x] == ' ':
 										(horz_word, x_start, x_end) = self.__get_full_word(x, i, new_word[i - y_start], HORIZONTAL)
-										if not(horz_word in self.wordlist) and len(horz_word) > 1:
+										if not(horz_word.lower() in self.wordlist) and len(horz_word) > 1:
 											valid = False
 											break
 								if valid:
